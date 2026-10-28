@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wizard Piano Alimentare</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;color:#1a1a1a;background:#f5f5f0;min-height:100vh;padding:1.5rem}
+.wizard{max-width:720px;margin:0 auto;background:#fff;border-radius:16px;padding:2rem;box-shadow:0 2px 12px rgba(0,0,0,.08)}
+.progress-bar{display:flex;gap:6px;margin-bottom:2rem;align-items:center}
+.step-dot{width:32px;height:32px;border-radius:50%;border:1.5px solid #ccc;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#888;flex-shrink:0}
+.step-dot.active{background:#2563eb;color:#fff;border-color:#2563eb}
+.step-dot.done{background:#16a34a;color:#fff;border-color:#16a34a}
+.step-line{flex:1;height:1px;background:#ddd}
+.step-title{font-size:22px;font-weight:600;margin-bottom:.4rem}
+.step-sub{font-size:14px;color:#666;margin-bottom:1.5rem}
+.card{background:#f8f8f5;border:1px solid #e5e5e0;border-radius:12px;padding:1.25rem;margin-bottom:.75rem}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:.75rem}
+.field-row.three{grid-template-columns:1fr 1fr 1fr}
+.field-label{font-size:12px;color:#555;margin-bottom:5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+input[type=number],input[type=text],select{width:100%;height:38px;padding:0 12px;border:1px solid #d0d0cc;border-radius:8px;background:#fff;color:#1a1a1a;font-size:14px}
+input:focus,select:focus{outline:2px solid #2563eb;outline-offset:1px}
+.option-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.option-btn{padding:10px 14px;border:1px solid #d0d0cc;border-radius:8px;background:#fff;color:#333;font-size:13px;cursor:pointer;text-align:left;line-height:1.4;transition:all .15s}
+.option-btn:hover{border-color:#2563eb;background:#eff6ff}
+.option-btn.selected{background:#dbeafe;border-color:#2563eb;color:#1d4ed8;font-weight:500}
+.food-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin-bottom:.5rem}
+.food-item{padding:10px 12px;border:1px solid #e0e0db;border-radius:8px;background:#fff;cursor:pointer;transition:all .15s}
+.food-item:hover{border-color:#2563eb}
+.food-item.selected{background:#dcfce7;border-color:#16a34a}
+.food-name{font-size:13px;font-weight:500;color:#1a1a1a}
+.food-macro{font-size:11px;color:#888;margin-top:3px}
+.section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#888;margin:1.2rem 0 .5rem}
+.excl-grid{display:flex;flex-wrap:wrap;gap:8px}
+.excl-btn{padding:7px 16px;border:1px solid #d0d0cc;border-radius:20px;font-size:13px;cursor:pointer;background:#fff;color:#333;transition:all .15s}
+.excl-btn.selected{background:#fee2e2;border-color:#dc2626;color:#b91c1c;font-weight:500}
+.nav{display:flex;justify-content:space-between;margin-top:2rem;gap:12px}
+.btn-back{padding:10px 20px;border:1px solid #d0d0cc;border-radius:8px;background:#fff;color:#333;font-size:14px;cursor:pointer}
+.btn-next{padding:10px 24px;border:none;border-radius:8px;background:#2563eb;color:#fff;font-size:14px;font-weight:600;cursor:pointer;margin-left:auto}
+.btn-next:hover{background:#1d4ed8}
+.metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:1rem}
+.metric{background:#f8f8f5;border-radius:8px;padding:.75rem 1rem;border:1px solid #e5e5e0}
+.metric-label{font-size:11px;color:#888;margin-bottom:4px;font-weight:600;text-transform:uppercase}
+.metric-value{font-size:22px;font-weight:600;color:#1a1a1a}
+.metric-unit{font-size:12px;color:#888;font-weight:400}
+.meal-card{background:#f8f8f5;border:1px solid #e5e5e0;border-radius:10px;padding:1rem 1.25rem;margin-bottom:.6rem}
+.meal-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.4rem}
+.meal-name{font-size:14px;font-weight:600;color:#1a1a1a}
+.meal-macro-txt{font-size:12px;color:#888;margin-top:2px}
+.meal-badge{font-size:11px;padding:3px 10px;border-radius:20px;background:#dbeafe;color:#1d4ed8;white-space:nowrap;font-weight:500}
+.meal-badge.col{background:#fef9c3;color:#854d0e}
+.meal-badge.sp{background:#fce7f3;color:#9d174d}
+.meal-items{font-size:13px;color:#555;margin-top:.3rem;line-height:1.8}
+.dot-item::before{content:"¬∑ ";color:#aaa}
+.tabs{display:flex;gap:0;margin-bottom:1rem;border-bottom:2px solid #e5e5e0}
+.tab{padding:9px 18px;border:none;background:transparent;font-size:13px;cursor:pointer;color:#888;border-bottom:2px solid transparent;margin-bottom:-2px;font-weight:500;transition:all .15s}
+.tab.active{color:#2563eb;border-bottom-color:#2563eb}
+.result-header{background:linear-gradient(135deg,#1e3a5f,#2563eb);border-radius:12px;padding:1.25rem 1.5rem;margin-bottom:1.25rem;color:#fff}
+.result-header h2{font-size:18px;font-weight:600;margin-bottom:.25rem}
+.result-header p{font-size:13px;opacity:.8}
+.peso-input-row{display:flex;gap:8px;align-items:flex-end;margin-bottom:1rem;flex-wrap:wrap}
+.peso-input-row>div{flex:1;min-width:120px}
+.btn-add{padding:9px 18px;border:none;border-radius:8px;background:#16a34a;color:#fff;font-size:14px;font-weight:600;cursor:pointer;height:38px}
+.btn-add:hover{background:#15803d}
+.peso-table{width:100%;border-collapse:collapse;margin-top:.5rem;font-size:13px}
+.peso-table th{text-align:left;padding:8px 10px;background:#f0f0eb;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#777;font-weight:600}
+.peso-table td{padding:8px 10px;border-bottom:1px solid #eee}
+.peso-delta-neg{color:#16a34a;font-weight:600}
+.peso-delta-pos{color:#dc2626;font-weight:600}
+.peso-delta-zero{color:#999}
+.btn-del{background:none;border:none;color:#dc2626;cursor:pointer;font-size:16px;padding:0 4px}
+.chart-wrap{margin:1rem 0;padding:1rem;background:#f8f8f5;border-radius:10px;border:1px solid #e5e5e0}
+.empty-pesate{text-align:center;padding:2rem;color:#999;font-size:14px}
+.sel-food-list{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:.5rem}
+.sel-food-chip{display:inline-block;padding:6px 12px;border-radius:8px;font-size:13px;background:#dcfce7;color:#166534;border:1px solid #86efac}
+.sel-food-chip.excl{background:#fee2e2;color:#b91c1c;border-color:#fca5a5}
+.import-box{background:#eff6ff;border:1px dashed #2563eb;border-radius:10px;padding:1rem 1.25rem;margin-bottom:1rem;text-align:center}
+.import-box label{font-size:13px;color:#1d4ed8;font-weight:500;cursor:pointer}
+.import-box input{display:none}
+.export-banner{display:flex;align-items:center;justify-content:space-between;gap:16px;background:linear-gradient(135deg,#16a34a,#15803d);border-radius:14px;padding:1.25rem 1.5rem;margin:1.75rem 0 1rem;box-shadow:0 4px 16px rgba(22,163,74,.3);flex-wrap:wrap}
+.export-banner-text{flex:1;min-width:200px}
+.export-banner-title{font-size:17px;font-weight:700;color:#fff;margin-bottom:3px}
+.export-banner-sub{font-size:13px;color:rgba(255,255,255,.9);line-height:1.4}
+.export-banner-btn{background:#fff;color:#15803d;border:none;border-radius:10px;padding:14px 28px;font-size:16px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.15);transition:transform .12s}
+.export-banner-btn:hover{transform:scale(1.04)}
+.export-banner-btn:active{transform:scale(.98)}
+.export-banner.locked{background:linear-gradient(135deg,#9ca3af,#6b7280);box-shadow:0 4px 16px rgba(107,114,128,.3)}
+.export-banner-btn.locked{color:#6b7280;opacity:.95}
+.export-warning{background:#fef2f2;border:1.5px solid #dc2626;border-radius:12px;padding:1rem 1.25rem;margin:1.25rem 0;font-size:14px;color:#991b1b;line-height:1.5}
+.export-warning ul{font-size:13px}
+.export-fallback-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center;z-index:1000;padding:0}
+.export-fallback-card{background:#fff;border-radius:16px 16px 0 0;width:100%;max-width:560px;max-height:88vh;overflow-y:auto;padding:1.25rem;box-shadow:0 -4px 24px rgba(0,0,0,.2);animation:slideUp .25s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.export-fallback-head{display:flex;justify-content:space-between;align-items:center;font-size:16px;font-weight:700;color:#1a1a1a;margin-bottom:.5rem}
+.export-fallback-close{background:none;border:none;font-size:18px;color:#999;cursor:pointer;padding:4px 8px}
+.export-fallback-msg{font-size:14px;color:#555;margin-bottom:1rem;line-height:1.5}
+.export-fallback-btn{display:block;width:100%;padding:13px;border-radius:10px;border:1px solid #2563eb;background:#fff;color:#2563eb;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:.6rem}
+.export-fallback-btn.primary{background:#16a34a;border-color:#16a34a;color:#fff}
+.export-fallback-btn:active{transform:scale(.98)}
+.export-fallback-hint{font-size:12px;color:#888;margin:.75rem 0 .5rem;line-height:1.5}
+.export-fallback-text{width:100%;height:140px;border:1px solid #d0d0cc;border-radius:8px;padding:10px;font-family:monospace;font-size:11px;color:#333;background:#f8f8f5;resize:vertical}
+.export-fallback-fname{font-size:12px;color:#666;margin-top:.6rem;text-align:center}
+.notice-toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom, 0px));transform:translateX(-50%);max-width:min(92vw,480px);background:#1f2937;color:#fff;font-size:14px;line-height:1.45;padding:12px 16px;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.25);z-index:1100}
+.q-label{font-size:14px;font-weight:600;color:#1a1a1a;margin-bottom:.75rem;line-height:1.4}
+.q-note{width:100%;min-height:44px;border:1px solid #d0d0cc;border-radius:8px;padding:9px 11px;font-family:inherit;font-size:13px;color:#333;background:#fff;resize:vertical;margin-top:2px}
+.q-note:focus{outline:2px solid #2563eb;outline-offset:1px}
+input[type=time]{width:100%;height:38px;padding:0 11px;border:1px solid #d0d0cc;border-radius:8px;font-size:14px;color:#1a1a1a;background:#fff}
+.abit-row{font-size:13px;color:#333;padding:5px 0;border-bottom:1px solid #f0f0eb;line-height:1.5}
+.abit-row:last-child{border-bottom:none}
+.abit-q{font-weight:600;color:#1a1a1a}
+.abit-a{color:#2563eb}
+</style>
+</head>
+<body>
+<div class="wizard">
+  <div class="progress-bar" id="progress"></div>
+  <div id="step-content"></div>
+</div>
+
+<script>
+const STEPS=['Dati','Stile di vita','Esclusioni','Alimenti','Abitudini','Scheda'];
+// Pagina pubblicata su claude.ai: il salvataggio dei file passa dal visualizzatore (capability "downloads")
+const ON_CLAUDE_HOST=!!(window.claude&&typeof window.claude.use==='function');
+const DOWNLOADS_READY=ON_CLAUDE_HOST
+  ? Promise.resolve().then(()=>window.claude.use('downloads')).catch(()=>null)
+  : Promise.resolve(null);
+
+// Messaggio non bloccante (sostituisce i popup di sistema, disattivati nelle pagine pubblicate)
+function notify(msg){
+  let t=document.getElementById('notice-toast');
+  if(!t){t=document.createElement('div');t.id='notice-toast';t.className='notice-toast';t.setAttribute('role','status');document.body.appendChild(t);}
+  t.textContent=msg;
+  clearTimeout(notify._timer);
+  notify._timer=setTimeout(()=>{t.remove();},4000);
+}
+
+let current=0;
+let data={nome:'',sesso:'M',eta:null,peso:null,altezza:null,obiettivo:'',protFactor:1.8,lavoro:'',passi:5000,sport:'',sportFreq:0,esclusioni:[],alimenti:[],pesate:[],passiTouched:false,esclusioniTouched:false,abitudini:{}};
+
+const FOODS={
+  proteine:[
+    {id:'pollo',n:'Petto di pollo (peso a crudo)',p:23,c:0,g:1.5,fib:0},{id:'tacchino',n:'Fesa di tacchino (peso a crudo)',p:24,c:0,g:1,fib:0},
+    {id:'tonno',n:'Tonno al naturale (sgocciolato)',p:26,c:0,g:1,fib:0},{id:'salmone',n:'Salmone (peso a crudo)',p:20,c:0,g:13,fib:0},
+    {id:'nasello',n:'Nasello / merluzzo (peso a crudo)',p:18,c:0,g:0.7,fib:0},{id:'sgombro',n:'Sgombro al naturale (sgocciolato)',p:22,c:0,g:12,fib:0},
+    {id:'uova',n:'Uova intere',p:13,c:0.7,g:11,fib:0},{id:'albumi',n:'Albumi',p:11,c:0.7,g:0.2,fib:0},
+    {id:'fiocchilatte',n:'Fiocchi di latte',p:11,c:3.5,g:1,fib:0},{id:'ricotta',n:'Ricotta vaccina',p:11,c:3,g:8,fib:0},
+    {id:'greco',n:'Yogurt greco 0%',p:10,c:4,g:0.4,fib:0},{id:'ceci',n:'Ceci secchi (peso a crudo)',p:19,c:47,g:6,fib:13.6},
+    {id:'lenticchie',n:'Lenticchie secche (peso a crudo)',p:23,c:51,g:1,fib:13.8},{id:'fagioli',n:'Fagioli secchi (peso a crudo)',p:23,c:45,g:2,fib:17.5},
+    {id:'soia',n:'Soia secca (peso a crudo)',p:37,c:23,g:18,fib:11},
+    {id:'tofu',n:'Tofu compatto',p:8,c:1.9,g:4.8,fib:0.7},
+    {id:'bresaola',n:'Bresaola',p:32,c:0,g:2,fib:0},{id:'gamberi',n:'Gamberi / gamberetti (peso a crudo)',p:24,c:0.2,g:1,fib:0},
+    {id:'polpo',n:'Polpo / seppia (peso a crudo)',p:16,c:0.7,g:1.5,fib:0},{id:'skyr',n:'Skyr',p:11,c:4,g:0.2,fib:0},
+    {id:'mozzarella',n:'Mozzarella light',p:17,c:1,g:15,fib:0},{id:'grana',n:'Grana Padano',p:33,c:0,g:28,fib:0},
+    {id:'manzo',n:'Manzo magro girello (peso a crudo)',p:22,c:0,g:5,fib:0},{id:'tempeh',n:'Tempeh',p:19,c:9,g:11,fib:6},
+    {id:'seitan',n:'Seitan',p:24,c:14,g:1.5,fib:1},{id:'whey',n:'Proteine whey (polvere)',p:80,c:7,g:6,fib:0}
+  ],
+  carboidrati:[
+    {id:'riso',n:'Riso integrale (peso a crudo)',p:7.5,c:77,g:2.2,fib:3.5},{id:'pasta',n:'Pasta integrale (peso a crudo)',p:13,c:64,g:2.5,fib:8},
+    {id:'farro',n:'Farro (peso a crudo)',p:15,c:67,g:2.5,fib:6.8},{id:'avena',n:'Avena in chicchi (peso a crudo)',p:13.5,c:66,g:7,fib:10.6},
+    {id:'fiocchiavena',n:"Fiocchi d'avena",p:13.5,c:60,g:7,fib:9.5},
+    {id:'orzo',n:'Orzo perlato (peso a crudo)',p:10.4,c:71,g:1.4,fib:9.2},{id:'patate',n:'Patate bollite',p:2,c:17,g:0.1,fib:1.6},
+    {id:'quinoa',n:'Quinoa (peso a crudo)',p:14,c:64,g:6,fib:7},{id:'segale',n:'Pane di segale',p:8.5,c:45,g:1.5,fib:6},
+    {id:'basmati',n:'Riso basmati (peso a crudo)',p:7.5,c:78,g:0.9,fib:1.3},
+    {id:'venere',n:'Riso venere (peso a crudo)',p:8,c:75,g:2.5,fib:3},{id:'saraceno',n:'Grano saraceno (peso a crudo)',p:13.3,c:72,g:3.4,fib:10},
+    {id:'panint',n:'Pane integrale',p:9,c:42,g:2,fib:7},{id:'couscous',n:'Couscous integrale (peso a crudo)',p:13,c:69,g:2,fib:8},
+    {id:'patdolci',n:'Patate dolci',p:1.6,c:20,g:0.1,fib:3},
+    {id:'fmela',n:'Frutta: Mela',p:0.2,c:13,g:0.1,fib:2.5},{id:'fbanana',n:'Frutta: Banana',p:1.2,c:23,g:0.3,fib:1.8},
+    {id:'farancia',n:'Frutta: Arancia',p:0.7,c:8,g:0.2,fib:1.6},{id:'ffragole',n:'Frutta: Fragole',p:0.9,c:5,g:0.4,fib:1.6},
+    {id:'fbosco',n:'Frutta: Frutti di bosco',p:1,c:10,g:0.4,fib:5},{id:'fkiwi',n:'Frutta: Kiwi',p:1.2,c:9,g:0.6,fib:2.2},
+    {id:'fpera',n:'Frutta: Pera',p:0.3,c:9,g:0.1,fib:3.8},{id:'fmirtilli',n:'Frutta: Mirtilli',p:0.7,c:10,g:0.3,fib:3},
+    {id:'fpesca',n:'Frutta: Pesca',p:0.8,c:6,g:0.1,fib:1.6},{id:'fananas',n:'Frutta: Ananas',p:0.5,c:10,g:0.1,fib:1}
+  ],
+  verdure:[
+    {id:'broccoli',n:'Broccoli',p:5.6,c:7,g:0.4,fib:3},{id:'zucchine',n:'Zucchine',p:1.2,c:3.4,g:0.3,fib:1.2},
+    {id:'spinaci',n:'Spinaci',p:2.9,c:3.6,g:0.4,fib:2.2},{id:'rapa',n:'Rapa rossa',p:1.5,c:9.6,g:0.1,fib:2.6},
+    {id:'finocchi',n:'Finocchi',p:1.2,c:3.1,g:0.2,fib:2.2},{id:'pomodori',n:'Pomodori',p:0.9,c:3.5,g:0.2,fib:1.2},
+    {id:'cavolfiore',n:'Cavolfiore',p:1.9,c:5,g:0.3,fib:2.4},{id:'carote',n:'Carote',p:0.9,c:10,g:0.2,fib:2.8},
+    {id:'cetrioli',n:'Cetrioli',p:0.7,c:3.6,g:0.1,fib:0.8},{id:'insalata',n:'Insalata mista',p:1.2,c:2.5,g:0.2,fib:1.5},
+    {id:'asparagi',n:'Asparagi',p:3.6,c:4,g:0.2,fib:2.1},{id:'melanzane',n:'Melanzane',p:1.1,c:6,g:0.2,fib:3},
+    {id:'peperoni',n:'Peperoni',p:1.3,c:6,g:0.3,fib:1.9},{id:'cavolonero',n:'Cavolo nero/verza',p:3.3,c:5,g:0.5,fib:3.6},
+    {id:'funghi',n:'Funghi champignon',p:3.1,c:3.3,g:0.3,fib:2.5},{id:'radicchio',n:'Radicchio',p:1.4,c:3,g:0.2,fib:3},
+    {id:'cavoletti',n:'Cavoletti di Bruxelles',p:3.4,c:9,g:0.3,fib:3.8},{id:'bietola',n:'Bietola',p:1.8,c:3.7,g:0.2,fib:1.6}
+  ],
+  grassi:[
+    {id:'evo',n:'Olio EVO',p:0,c:0,g:100,fib:0},{id:'avocado',n:'Avocado',p:2,c:9,g:15,fib:6.7},
+    {id:'mandorle',n:'Mandorle',p:21,c:22,g:49,fib:12.5},{id:'noci',n:'Noci',p:15,c:14,g:65,fib:6.7},
+    {id:'semi',n:'Semi misti',p:17,c:11,g:43,fib:8},
+    {id:'olive',n:'Olive',p:1,c:6,g:15,fib:3.3},{id:'lino',n:'Semi di lino',p:18,c:29,g:42,fib:27},
+    {id:'semizucca',n:'Semi di zucca',p:19,c:14,g:49,fib:6},{id:'pistacchi',n:'Pistacchi',p:20,c:28,g:45,fib:10},
+    {id:'nocciole',n:'Nocciole',p:15,c:17,g:61,fib:10},
+    {id:'maionese',n:'Maionese (classica)',p:1.1,c:1.9,g:79,fib:0},{id:'maionese_light',n:'Maionese light',p:1,c:8,g:28,fib:0}
+  ]
+};
+
+const EXCL=['Lattosio','Glutine','Uova','Pesce','Crostacei','Frutta a guscio','Soia','Vegetariano','Vegano','No carne di maiale'];
+
+function calcBMR(s,e,p,h){
+  return s==='M'?Math.round((10*p)+(6.25*h)-(5*e)+5):Math.round((10*p)+(6.25*h)-(5*e)-161);
+}
+function getMultiplier(passi,sport,freq){
+  let base=1.2;
+  if(passi>=10000)base=1.55;else if(passi>=7500)base=1.45;else if(passi>=5000)base=1.375;else if(passi>=3000)base=1.3;
+  const bonus={nessuno:0,camminata:0.05,palestra:freq>=3?0.2:freq>=2?0.15:0.1,nuoto:freq>=3?0.2:0.15,ciclismo:freq>=2?0.15:0.1,corsa:freq>=3?0.25:0.15,altro:freq>=2?0.15:0.1};
+  return Math.min(1.9,base+(bonus[sport]||0));
+}
+function getSurplus(ob){return ob==='massa'?1.1:ob==='dimagrimento'?0.85:1.0;}
+function getMacros(tdee,peso,pf){
+  const prot=Math.round(peso*(pf||1.8)),protKcal=prot*4;
+  const fatKcal=Math.round(tdee*0.28),fat=Math.round(fatKcal/9);
+  const carbKcal=tdee-protKcal-fatKcal,carb=Math.round(carbKcal/4);
+  return{prot,fat,carb,protKcal,fatKcal,carbKcal};
+}
+function allFoods(){return[...FOODS.proteine,...FOODS.carboidrati,...FOODS.verdure,...FOODS.grassi];}
+function filterEx(foods){
+  const ex=data.esclusioni;
+  return foods.filter(f=>{
+    if(ex.includes('Uova')&&['uova','albumi'].includes(f.id))return false;
+    if(ex.includes('Pesce')&&['tonno','salmone','nasello','sgombro','polpo'].includes(f.id))return false;
+    if(ex.includes('Crostacei')&&['gamberi'].includes(f.id))return false;
+    if(ex.includes('Soia')&&['soia','tofu','tempeh'].includes(f.id))return false;
+    if(ex.includes('Glutine')&&['seitan'].includes(f.id))return false;
+    if(ex.includes('Frutta a guscio')&&['mandorle','noci','pistacchi','nocciole'].includes(f.id))return false;
+    if((ex.includes('Vegetariano')||ex.includes('Vegano'))&&['pollo','tacchino','tonno','salmone','nasello','sgombro','bresaola','gamberi','polpo','manzo'].includes(f.id))return false;
+    if(ex.includes('Vegano')&&['uova','albumi','fiocchilatte','ricotta','greco','skyr','mozzarella','grana','whey'].includes(f.id))return false;
+    return true;
+  });
+}
+function getSelected(){return allFoods().filter(f=>data.alimenti.includes(f.id));}
+
+function renderProgress(){
+  document.getElementById('progress').innerHTML=STEPS.map((s,i)=>{
+    const cls=i<current?'done':i===current?'active':'';
+    return`<div class="step-dot ${cls}">${i<current?'‚úì':i+1}</div>${i<STEPS.length-1?'<div class="step-line"></div>':''}`;
+  }).join('');
+}
+
+function renderStep(){
+  collectStep();
+  renderProgress();
+  const el=document.getElementById('step-content');
+  if(current===0)el.innerHTML=s0();
+  else if(current===1)el.innerHTML=s1();
+  else if(current===2)el.innerHTML=s2();
+  else if(current===3)el.innerHTML=s3();
+  else if(current===4)el.innerHTML=s4();
+  else {el.innerHTML=sResult();setTimeout(drawChart,50);}
+  attach();
+}
+
+function s0(){
+  return`<p class="step-title">Dati del cliente</p>
+  <p class="step-sub">Inserisci i dati anagrafici per calcolare il metabolismo basale (formula Mifflin-St Jeor).</p>
+  <div class="import-box">
+    <label for="import-file">üìÇ Hai gi√† una scheda salvata? Caricala qui per riprendere</label>
+    <input type="file" id="import-file" accept=".json" onchange="if(this.files[0])importData(this.files[0])">
+  </div>
+  <div class="card">
+    <div class="field-row"><div><div class="field-label">Nome (opzionale)</div><input type="text" id="f-nome" value="${data.nome||''}" placeholder="es. Mario Rossi"></div>
+    <div><div class="field-label">Sesso biologico</div><select id="f-sesso"><option value="M" ${data.sesso==='M'?'selected':''}>Maschio</option><option value="F" ${data.sesso==='F'?'selected':''}>Femmina</option></select></div></div>
+    <div class="field-row three">
+      <div><div class="field-label">Et√† (anni)</div><input type="number" id="f-eta" value="${data.eta??''}" min="15" max="90" placeholder="es. 40"></div>
+      <div><div class="field-label">Peso (kg)</div><input type="number" id="f-peso" value="${data.peso??''}" min="30" max="200" step="0.1" placeholder="es. 70"></div>
+      <div><div class="field-label">Altezza (cm)</div><input type="number" id="f-altezza" value="${data.altezza??''}" min="140" max="220" placeholder="es. 170"></div>
+    </div>
+  </div>
+  <div class="section-label">Obiettivo principale</div>
+  <div class="option-grid">
+    ${[['mantenimento','‚öñÔ∏è Mantenimento peso'],['massa','üí™ Aumento massa muscolare'],['dimagrimento','üî• Perdita di grasso']].map(([v,l])=>`<button class="option-btn ${data.obiettivo===v?'selected':''}" data-obiettivo="${v}">${l}</button>`).join('')}
+  </div>
+  <div class="nav"><button class="btn-next" onclick="next()">Avanti ‚Üí</button></div>`;
+}
+
+function s1(){
+  return`<p class="step-title">Stile di vita</p>
+  <p class="step-sub">Questi dati determinano il moltiplicatore per calcolare il fabbisogno calorico reale (TDEE).</p>
+  <div class="card"><div class="field-label" style="margin-bottom:.75rem">Tipo di lavoro</div>
+    <div class="option-grid">${[['sedentario','Sedentario (ufficio)'],['lieve','Leggero (in piedi spesso)'],['moderato','Moderato (fisico part-time)'],['pesante','Pesante (fisico full-time)']].map(([v,l])=>`<button class="option-btn ${data.lavoro===v?'selected':''}" data-lavoro="${v}">${l}</button>`).join('')}</div>
+  </div>
+  <div class="card">
+    <div class="field-label">Passi medi giornalieri: <strong id="passi-val">${data.passi.toLocaleString('it-IT')}</strong></div>
+    <input type="range" id="f-passi" min="1000" max="20000" step="500" value="${data.passi}" style="width:100%;margin-top:.5rem">
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:#aaa;margin-top:3px"><span>1.000</span><span>20.000</span></div>
+  </div>
+  <div class="card"><div class="field-label" style="margin-bottom:.75rem">Attivit√† sportiva</div>
+    <div class="option-grid">${[['nessuno','Nessuna'],['camminata','Camminata'],['palestra','Palestra / pesi'],['nuoto','Nuoto'],['ciclismo','Ciclismo'],['corsa','Corsa'],['altro','Altro']].map(([v,l])=>`<button class="option-btn ${data.sport===v?'selected':''}" data-sport="${v}">${l}</button>`).join('')}</div>
+    ${data.sport!=='nessuno'?`<div style="margin-top:.75rem"><div class="field-label">Sessioni/settimana</div><div style="display:flex;gap:8px;margin-top:6px">${[1,2,3,4,5].map(n=>`<button class="option-btn ${data.sportFreq===n?'selected':''}" style="min-width:46px;text-align:center" data-freq="${n}">${n}x</button>`).join('')}</div></div>`:''}
+  </div>
+  <div class="nav"><button class="btn-back" onclick="back()">‚Üê Indietro</button><button class="btn-next" onclick="next()">Avanti ‚Üí</button></div>`;
+}
+
+function s2(){
+  return`<p class="step-title">Esclusioni alimentari</p>
+  <p class="step-sub">Seleziona allergie, intolleranze o preferenze ‚Äî gli alimenti esclusi non compariranno nel piano.</p>
+  <div class="card"><div class="excl-grid">${EXCL.map(e=>`<button class="excl-btn ${data.esclusioni.includes(e)?'selected':''}" data-excl="${e}">${e}</button>`).join('')}</div></div>
+  <div style="margin-top:1rem"><button class="option-btn ${data.esclusioniTouched&&data.esclusioni.length===0?'selected':''}" style="width:100%;text-align:center" onclick="data.esclusioniTouched=true;data.esclusioni=[];renderStep()">‚úì Non ho esclusioni alimentari</button></div>
+  <div class="nav"><button class="btn-back" onclick="back()">‚Üê Indietro</button><button class="btn-next" onclick="next()">Avanti ‚Üí</button></div>`;
+}
+
+function s3(){
+  const ex=filterEx(allFoods());
+  const rCat=(label,ids)=>{
+    const items=ex.filter(f=>ids.includes(f.id));
+    if(!items.length)return'';
+    return`<div class="section-label">${label}</div><div class="food-grid">${items.map(f=>`<div class="food-item ${data.alimenti.includes(f.id)?'selected':''}" data-fid="${f.id}"><div class="food-name">${f.n}</div><div class="food-macro">P ${f.p} ¬∑ C ${f.c} ¬∑ G ${f.g}${f.fib?' ¬∑ <span style="color:#16a34a">Fib '+f.fib+'</span>':''} / 100g</div></div>`).join('')}</div>`;
+  };
+  return`<p class="step-title">Selezione alimenti</p>
+  <p class="step-sub">Seleziona gli alimenti graditi. Il piano verr√† costruito su questa lista. Lascia tutto deselezionato per usare tutti gli alimenti disponibili.</p>
+  ${rCat('ü•© Proteine',FOODS.proteine.map(f=>f.id))}
+  ${rCat('üåæ Carboidrati',FOODS.carboidrati.map(f=>f.id))}
+  ${rCat('ü•¶ Verdure',FOODS.verdure.map(f=>f.id))}
+  ${rCat('ü´í Grassi buoni',FOODS.grassi.map(f=>f.id))}
+  <div class="nav"><button class="btn-back" onclick="back()">‚Üê Indietro</button><button class="btn-next" onclick="next()">Avanti ‚Üí</button></div>`;
+}
+
+function s4(){
+  const ab=data.abitudini||{};
+  const yn=(key,question,opts)=>{
+    const options=opts||[['si','S√¨'],['no','No']];
+    return`<div class="card">
+      <div class="q-label">${question}</div>
+      <div class="option-grid" style="margin-bottom:.6rem">${options.map(([v,l])=>`<button class="option-btn ${ab[key]===v?'selected':''}" onclick="setAbit('${key}','${v}')">${l}</button>`).join('')}</div>
+      <textarea class="q-note" placeholder="Vuoi aggiungere qualcosa? (facoltativo)" onchange="setAbitNote('${key}',this.value)">${ab[key+'_note']||''}</textarea>
+    </div>`;
+  };
+  return`<p class="step-title">Abitudini alimentari</p>
+  <p class="step-sub">Queste risposte aiutano il consulente a organizzare numero e orari dei pasti. Per ogni domanda puoi anche scrivere una nota.</p>
+
+  ${yn('colazione','Fai colazione alla mattina?')}
+  ${yn('treParti','Riesci a gestire tre pasti principali nella giornata (colazione, pranzo, cena)?')}
+  ${yn('spuntino','Riusciresti a gestire uno spuntino oltre ai pasti principali?')}
+  ${yn('percezione','Qual √® la tua percezione nei confronti del cibo?',[['fame','Mangio per fame'],['dovere','Mangio per dovere'],['abitudine','Mangio per abitudine']])}
+
+  <div class="section-label">üïê Organizzazione della giornata</div>
+
+  <div class="card">
+    <div class="q-label">A che ora ti svegli e a che ora vai a dormire?</div>
+    <div class="field-row">
+      <div><div class="field-label">Sveglia</div><input type="time" value="${ab.sveglia||''}" onchange="setAbit('sveglia',this.value)"></div>
+      <div><div class="field-label">Riposo</div><input type="time" value="${ab.riposo||''}" onchange="setAbit('riposo',this.value)"></div>
+    </div>
+  </div>
+
+  ${yn('saltaPasti','Ti capita di saltare i pasti o mangiare fuori casa durante la giornata?',[['spesso','Spesso'],['talvolta','Talvolta'],['raramente','Raramente']])}
+
+  <div class="card">
+    <div class="q-label">Quanto tempo hai mediamente per il pranzo?</div>
+    <div class="option-grid" style="margin-bottom:.6rem">${[['breve','Pausa breve (&lt;30 min)'],['media','Media (30-60 min)'],['ampia','Ampia (&gt;60 min)']].map(([v,l])=>`<button class="option-btn ${ab.tempoPranzo===v?'selected':''}" onclick="setAbit('tempoPranzo','${v}')">${l}</button>`).join('')}</div>
+    <textarea class="q-note" placeholder="Note (facoltativo)" onchange="setAbitNote('tempoPranzo',this.value)">${ab.tempoPranzo_note||''}</textarea>
+  </div>
+
+  ${yn('fame','In quali momenti senti pi√π fame durante la giornata?',[['mattina','Mattina'],['pomeriggio','Pomeriggio'],['sera','Sera'],['variabile','Variabile']])}
+  ${yn('energia','Come sono i tuoi livelli di energia durante la giornata?',[['costanti','Costanti'],['caloPome','Calo nel pomeriggio'],['stanco','Spesso stanco'],['altalena','Altalenanti']])}
+
+  <div class="card">
+    <div class="q-label">Pratichi attivit√† fisica in orari specifici? (per posizionare i pasti attorno all'allenamento)</div>
+    <textarea class="q-note" placeholder="Es. palestra alle 18:00, corsa la mattina presto‚Ä¶ (facoltativo)" onchange="setAbitNote('orarioSport',this.value)">${ab.orarioSport_note||''}</textarea>
+  </div>
+
+  <div class="nav"><button class="btn-back" onclick="back()">‚Üê Indietro</button><button class="btn-next" onclick="next()">Genera scheda ‚Üí</button></div>`;
+}
+
+function setAbit(key,val){
+  if(!data.abitudini)data.abitudini={};
+  data.abitudini[key]=val;
+  renderStep();
+}
+function setAbitNote(key,val){
+  if(!data.abitudini)data.abitudini={};
+  data.abitudini[key+'_note']=val;
+}
+
+function renderAbitudini(){
+  const ab=data.abitudini||{};
+  const L={
+    colazione:{q:'Colazione',map:{si:'S√¨',no:'No'}},
+    treParti:{q:'Tre pasti principali',map:{si:'S√¨',no:'No'}},
+    spuntino:{q:'Spuntino extra',map:{si:'S√¨',no:'No'}},
+    percezione:{q:'Percezione del cibo',map:{fame:'Mangia per fame',dovere:'Mangia per dovere',abitudine:'Mangia per abitudine'}},
+    saltaPasti:{q:'Salta pasti / mangia fuori',map:{spesso:'Spesso',talvolta:'Talvolta',raramente:'Raramente'}},
+    tempoPranzo:{q:'Tempo per il pranzo',map:{breve:'Pausa breve (<30 min)',media:'Media (30-60 min)',ampia:'Ampia (>60 min)'}},
+    fame:{q:'Momenti di maggior fame',map:{mattina:'Mattina',pomeriggio:'Pomeriggio',sera:'Sera',variabile:'Variabile'}},
+    energia:{q:'Livelli di energia',map:{costanti:'Costanti',caloPome:'Calo nel pomeriggio',stanco:'Spesso stanco',altalena:'Altalenanti'}},
+  };
+  let rows='';
+  Object.keys(L).forEach(k=>{
+    if(ab[k]||ab[k+'_note']){
+      const val=ab[k]?(L[k].map[ab[k]]||ab[k]):'‚Äî';
+      const note=ab[k+'_note']?` <span style="color:#888">‚Äî ${ab[k+'_note']}</span>`:'';
+      rows+=`<div class="abit-row"><span class="abit-q">${L[k].q}:</span> <span class="abit-a">${val}</span>${note}</div>`;
+    }
+  });
+  // Orari
+  if(ab.sveglia||ab.riposo){
+    rows+=`<div class="abit-row"><span class="abit-q">Sveglia / Riposo:</span> <span class="abit-a">${ab.sveglia||'‚Äî'} / ${ab.riposo||'‚Äî'}</span></div>`;
+  }
+  if(ab.orarioSport_note){
+    rows+=`<div class="abit-row"><span class="abit-q">Orari attivit√† fisica:</span> <span class="abit-a">${ab.orarioSport_note}</span></div>`;
+  }
+  if(!rows)rows='<div style="color:#999;font-size:13px;padding:.5rem 0">Nessuna risposta fornita.</div>';
+  return`<div class="card">${rows}</div>`;
+}
+
+function sResult(){
+  const comp=calcCompletion();
+  const hasBase=data.eta&&data.peso&&data.altezza&&data.obiettivo&&data.protFactor;
+  const bmr=hasBase?calcBMR(data.sesso,data.eta,data.peso,data.altezza):null;
+  const mult=getMultiplier(data.passi,data.sport||'nessuno',data.sportFreq);
+  const tdeeBase=bmr?Math.round(bmr*mult):null;
+  const tdee=tdeeBase?Math.round(tdeeBase*getSurplus(data.obiettivo||'mantenimento')):null;
+  const macros=(tdee&&data.protFactor)?getMacros(tdee,data.peso,data.protFactor):null;
+  const idrico=data.peso?(data.peso*35/1000).toFixed(1):'‚Äî';
+  const obLabel={mantenimento:'Mantenimento',massa:'Aumento massa muscolare',dimagrimento:'Perdita di grasso'}[data.obiettivo]||'‚Äî';
+  const nome=data.nome||'Cliente';
+  const protPerMeal=macros?Math.round(macros.prot/3):null;
+  const D=(v,unit)=>v!=null?v.toLocaleString('it-IT')+(unit?' ':''):'‚Äî';
+
+  // Build selected foods list grouped by category
+  const sel=data.alimenti.length?getSelected():[];
+  const catLabel={proteine:'ü•© Proteine',carboidrati:'üåæ Carboidrati',verdure:'ü•¶ Verdure',grassi:'ü´í Grassi'};
+  let foodsHTML='';
+  if(sel.length===0){
+    foodsHTML=`<div style="padding:1.5rem;text-align:center;color:#999;font-size:14px">Nessun alimento selezionato. Torna indietro per selezionarli.</div>`;
+  } else {
+    ['proteine','carboidrati','verdure','grassi'].forEach(cat=>{
+      const items=sel.filter(f=>FOODS[cat].find(x=>x.id===f.id));
+      if(items.length){
+        foodsHTML+=`<div class="section-label">${catLabel[cat]} (${items.length})</div><div class="sel-food-list">${items.map(f=>`<span class="sel-food-chip">${f.n}</span>`).join('')}</div>`;
+      }
+    });
+  }
+
+  const esclHTML=data.esclusioni.length?data.esclusioni.map(e=>`<span class="sel-food-chip excl">${e}</span>`).join(''):'<span style="color:#999;font-size:13px">Nessuna</span>';
+
+  return`
+  <div class="result-header"><h2>Scheda cliente ‚Äî ${nome}</h2><p>Riepilogo dati raccolti ¬∑ da inviare al consulente per la stesura del piano</p></div>
+
+  <div class="section-label" style="margin-top:0">üìä Parametri metabolici calcolati</div>
+  <div class="metric-grid">
+    <div class="metric"><div class="metric-label">BMR</div><div class="metric-value">${D(bmr)} <span class="metric-unit">kcal</span></div></div>
+    <div class="metric"><div class="metric-label">TDEE reale</div><div class="metric-value">${D(tdeeBase)} <span class="metric-unit">kcal</span></div></div>
+    <div class="metric"><div class="metric-label">Target calorico</div><div class="metric-value">${D(tdee)} <span class="metric-unit">kcal</span></div></div>
+    <div class="metric"><div class="metric-label">Acqua</div><div class="metric-value">${idrico} <span class="metric-unit">litri/giorno</span></div></div>
+  </div>
+  <div class="metric-grid">
+    <div class="metric"><div class="metric-label">Proteine</div><div class="metric-value">${macros?macros.prot+'g':'‚Äî'} <span class="metric-unit">${macros?'('+Math.round(macros.protKcal/tdee*100)+'%)':''}</span></div></div>
+    <div class="metric"><div class="metric-label">Carboidrati</div><div class="metric-value">${macros?macros.carb+'g':'‚Äî'} <span class="metric-unit">${macros?'('+Math.round(macros.carbKcal/tdee*100)+'%)':''}</span></div></div>
+    <div class="metric"><div class="metric-label">Grassi</div><div class="metric-value">${macros?macros.fat+'g':'‚Äî'} <span class="metric-unit">${macros?'('+Math.round(macros.fatKcal/tdee*100)+'%)':''}</span></div></div>
+    <div class="metric"><div class="metric-label">Proteine/pasto</div><div class="metric-value">${protPerMeal?protPerMeal+'g':'‚Äî'} <span class="metric-unit">su 3 pasti</span></div></div>
+  </div>
+
+  <div class="card" style="margin-top:1.25rem">
+    <div style="font-size:13px;color:#555;line-height:1.7">
+      <strong>Profilo:</strong> ${data.sesso==='M'?'Uomo':'Donna'}, ${data.eta||'‚Äî'} anni, ${data.peso||'‚Äî'} kg, ${data.altezza||'‚Äî'} cm<br>
+      <strong>Obiettivo:</strong> ${obLabel} ¬∑ <strong>Apporto proteico:</strong> ${data.protFactor.toString().replace('.',',')} g/kg <span style="color:#999;font-size:12px">(provvisorio, definito dal consulente)</span><br>
+      <strong>Lavoro:</strong> ${({sedentario:'Sedentario',lieve:'Leggero',moderato:'Moderato',pesante:'Pesante'})[data.lavoro]||'‚Äî'} ¬∑ <strong>Passi/giorno:</strong> ${data.passiTouched?data.passi.toLocaleString('it-IT'):'‚Äî'}<br>
+      <strong>Sport:</strong> ${!data.sport?'‚Äî':data.sport==='nessuno'?'Nessuno':data.sport+' ('+data.sportFreq+'x/sett)'}
+    </div>
+  </div>
+
+  <div class="section-label">üö´ Esclusioni alimentari</div>
+  <div class="sel-food-list">${esclHTML}</div>
+
+  <div class="section-label">üçΩÔ∏è Alimenti graditi selezionati</div>
+  ${foodsHTML}
+
+  <div class="section-label">üç¥ Abitudini alimentari</div>
+  ${renderAbitudini()}
+
+  <div class="section-label" style="margin-top:1.5rem">‚öñÔ∏è Pesata settimanale</div>
+  <div id="peso-container">${renderPesata()}</div>
+
+  <div id="export-warning" class="export-warning" style="display:none"></div>
+  ${comp.pct>=80?`
+  <div class="export-banner">
+    <div class="export-banner-text">
+      <div class="export-banner-title">Hai completato la scheda (${comp.pct}%)</div>
+      <div class="export-banner-sub">Scarica il file e invialo al tuo consulente per ricevere il piano alimentare personalizzato.</div>
+    </div>
+    <button class="export-banner-btn" onclick="exportData()">üì• Scarica la scheda</button>
+  </div>`:`
+  <div class="export-banner locked">
+    <div class="export-banner-text">
+      <div class="export-banner-title">‚ö†Ô∏è Scheda incompleta (${comp.pct}%)</div>
+      <div class="export-banner-sub">Serve almeno l'80% di compilazione per esportare. Premi il pulsante per vedere cosa manca, oppure torna indietro per completare.</div>
+    </div>
+    <button class="export-banner-btn locked" onclick="exportData()">üì• Scarica la scheda</button>
+  </div>`}
+
+  <div class="nav"><button class="btn-back" onclick="back()">‚Üê Modifica</button></div>`;
+}
+
+function calcCompletion(){
+  // 5 pagine, ognuna con campi chiave. Ritorna {pct, dettaglio[]}
+  const pages=[
+    {nome:'Dati anagrafici', fields:[
+      {ok:!!data.eta, label:'Et√†'},
+      {ok:!!data.peso, label:'Peso'},
+      {ok:!!data.altezza, label:'Altezza'},
+      {ok:!!data.obiettivo, label:'Obiettivo'},
+    ]},
+    {nome:'Stile di vita', fields:[
+      {ok:!!data.lavoro, label:'Tipo di lavoro'},
+      {ok:!!data.passiTouched, label:'Passi giornalieri'},
+      {ok:!!data.sport, label:'Attivit√† sportiva'},
+    ]},
+    {nome:'Esclusioni', fields:[
+      {ok:data.esclusioniTouched===true, label:'Esclusioni confermate'},
+    ]},
+    {nome:'Alimenti', fields:[
+      {ok:data.alimenti.length>=4, label:'Almeno 4 alimenti selezionati'},
+    ]},
+    {nome:'Abitudini', fields:[
+      {ok:!!(data.abitudini&&data.abitudini.colazione), label:'Colazione'},
+      {ok:!!(data.abitudini&&data.abitudini.treParti), label:'Tre pasti principali'},
+      {ok:!!(data.abitudini&&data.abitudini.spuntino), label:'Spuntino'},
+      {ok:!!(data.abitudini&&data.abitudini.percezione), label:'Percezione del cibo'},
+    ]},
+  ];
+  let tot=0,done=0;
+  const dettaglio=[];
+  pages.forEach(pg=>{
+    pg.fields.forEach(f=>{
+      tot++;
+      if(f.ok)done++;
+      else dettaglio.push(pg.nome+': '+f.label);
+    });
+  });
+  return {pct:Math.round(done/tot*100), done, tot, mancanti:dettaglio};
+}
+
+function exportData(){
+  const comp=calcCompletion();
+  if(comp.pct<80){
+    const box=document.getElementById('export-warning');
+    if(box){
+      box.style.display='block';
+      box.innerHTML=`<strong>‚ö†Ô∏è Compilazione insufficiente (${comp.pct}%)</strong><br>Per esportare la scheda devi completare almeno l'80% dei campi. Mancano:<ul style="margin:.5rem 0 0;padding-left:1.2rem">${comp.mancanti.map(m=>`<li>${m}</li>`).join('')}</ul>`;
+      box.scrollIntoView({behavior:'smooth',block:'center'});
+    }
+    return;
+  }
+  const bmr=calcBMR(data.sesso,data.eta,data.peso,data.altezza);
+  const mult=getMultiplier(data.passi,data.sport,data.sportFreq);
+  const tdeeBase=Math.round(bmr*mult);
+  const tdee=Math.round(tdeeBase*getSurplus(data.obiettivo));
+  const macros=getMacros(tdee,data.peso,data.protFactor);
+  const selNames=getSelected().map(f=>({id:f.id,nome:f.n,categoria:Object.keys(FOODS).find(c=>FOODS[c].find(x=>x.id===f.id))}));
+
+  const payload={
+    _tipo:'scheda_alimentare_ALI',
+    _versione:1,
+    _dataExport:new Date().toISOString(),
+    anagrafica:{nome:data.nome,sesso:data.sesso,eta:data.eta,peso:data.peso,altezza:data.altezza},
+    obiettivo:data.obiettivo,
+    apportoProteico:data.protFactor,
+    stileVita:{lavoro:data.lavoro,passi:data.passi,sport:data.sport,sportFreq:data.sportFreq},
+    esclusioni:data.esclusioni,
+    alimentiSelezionati:selNames,
+    abitudini:data.abitudini||{},
+    calcoli:{bmr,tdeeBase,targetCalorico:tdee,proteine_g:macros.prot,carboidrati_g:macros.carb,grassi_g:macros.fat,acqua_litri:+(data.peso*35/1000).toFixed(1)},
+    pesate:data.pesate
+  };
+
+  const jsonStr=JSON.stringify(payload,null,2);
+  const safeName=(data.nome||'cliente').replace(/[^a-z0-9]/gi,'_').toLowerCase();
+  const fileName=`scheda_${safeName}_${new Date().toISOString().slice(0,10)}.json`;
+  deliverExport(jsonStr,fileName);
+}
+
+async function deliverExport(jsonStr,fileName){
+  const isMobile=/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+
+  // Metodo 0: pagina pubblicata su claude.ai ‚Äî salvataggio tramite il visualizzatore
+  // (su computer scarica il file, nell'app Claude apre la condivisione del telefono)
+  if(ON_CLAUDE_HOST){
+    const downloads=await DOWNLOADS_READY;
+    if(downloads){
+      try{
+        await downloads.save({filename:fileName,data:jsonStr});
+        return;
+      }catch(err){
+        const code=err&&err.code;
+        if(code==='declined')return; // salvataggio annullato: nessun nuovo tentativo
+        if(code==='rate_limited'){notify('√à gi√† aperta una richiesta di salvataggio: attendi qualche secondo e riprova.');return;}
+        // salvataggio non disponibile in questa vista: si passa ai metodi alternativi
+      }
+    }
+  }
+
+  // Metodo 1: Web Share API con file (ideale su mobile ‚Äî invia direttamente a WhatsApp/Mail)
+  const file=new File([jsonStr],fileName,{type:'application/json'});
+  if(isMobile && navigator.canShare && navigator.canShare({files:[file]})){
+    navigator.share({files:[file],title:'Scheda alimentare',text:'Scheda alimentare compilata'})
+      .then(()=>{})
+      .catch(()=>{showExportFallback(jsonStr,fileName);});
+    return;
+  }
+
+  // Su claude.ai i download diretti del browser non partono: si apre il pannello copia/invio
+  if(ON_CLAUDE_HOST){showExportFallback(jsonStr,fileName);return;}
+
+  // Metodo 2: download classico (file HTML aperto direttamente nel browser)
+  try{
+    const blob=new Blob([jsonStr],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download=fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+    // Su mobile mostriamo comunque il fallback come rete di sicurezza, perch√© il download
+    // potrebbe fallire silenziosamente nei browser in-app (WhatsApp, Instagram, ecc.)
+    if(isMobile){setTimeout(()=>showExportFallback(jsonStr,fileName),800);}
+  }catch(err){
+    showExportFallback(jsonStr,fileName);
+  }
+}
+
+function showExportFallback(jsonStr,fileName){
+  let panel=document.getElementById('export-fallback');
+  if(!panel){
+    panel=document.createElement('div');
+    panel.id='export-fallback';
+    panel.className='export-fallback-overlay';
+    document.body.appendChild(panel);
+  }
+  const hasShare=!!navigator.share;
+  panel.innerHTML=`
+    <div class="export-fallback-card">
+      <div class="export-fallback-head">
+        <span>üìÑ Salva o invia la scheda</span>
+        <button class="export-fallback-close" onclick="document.getElementById('export-fallback').remove()">‚úï</button>
+      </div>
+      <p class="export-fallback-msg">Se il download non √® partito automaticamente, usa uno di questi metodi:</p>
+      ${hasShare?`<button class="export-fallback-btn primary" id="fb-share">üì§ Invia la scheda (WhatsApp, Mail‚Ä¶)</button>`:''}
+      <button class="export-fallback-btn" id="fb-copy">üìã Copia il contenuto</button>
+      <p class="export-fallback-hint">In alternativa, tieni premuto sul testo qui sotto, seleziona tutto e copia. Poi incollalo in una mail o un messaggio da inviare al consulente.</p>
+      <textarea class="export-fallback-text" id="fb-textarea" readonly>${jsonStr.replace(/</g,'&lt;')}</textarea>
+      <div class="export-fallback-fname">Nome file suggerito: <strong>${fileName}</strong></div>
+    </div>`;
+
+  const ta=document.getElementById('fb-textarea');
+  const copyBtn=document.getElementById('fb-copy');
+  copyBtn.onclick=()=>{
+    ta.select();
+    ta.setSelectionRange(0,999999);
+    let ok=false;
+    try{ok=document.execCommand('copy');}catch(e){}
+    if(navigator.clipboard){
+      navigator.clipboard.writeText(jsonStr).then(()=>{copyBtn.textContent='‚úì Copiato!';setTimeout(()=>copyBtn.textContent='üìã Copia il contenuto',2000);}).catch(()=>{});
+    }
+    if(ok){copyBtn.textContent='‚úì Copiato!';setTimeout(()=>copyBtn.textContent='üìã Copia il contenuto',2000);}
+  };
+  const shareBtn=document.getElementById('fb-share');
+  if(shareBtn){
+    shareBtn.onclick=()=>{
+      const file=new File([jsonStr],fileName,{type:'application/json'});
+      if(navigator.canShare && navigator.canShare({files:[file]})){
+        navigator.share({files:[file],title:'Scheda alimentare'}).catch(()=>{});
+      }else{
+        navigator.share({title:'Scheda alimentare',text:jsonStr}).catch(()=>{});
+      }
+    };
+  }
+}
+
+function importData(file){
+  const reader=new FileReader();
+  reader.onload=(e)=>{
+    try{
+      const p=JSON.parse(e.target.result);
+      if(p._tipo!=='scheda_alimentare_ALI'){notify('File non valido: non √® una scheda alimentare.');return;}
+      data.nome=p.anagrafica.nome||'';
+      data.sesso=p.anagrafica.sesso||'M';
+      data.eta=p.anagrafica.eta||40;
+      data.peso=p.anagrafica.peso||70;
+      data.altezza=p.anagrafica.altezza||170;
+      data.obiettivo=p.obiettivo||'mantenimento';
+      data.protFactor=p.apportoProteico||1.8;
+      data.lavoro=p.stileVita?.lavoro||'sedentario';
+      data.passi=p.stileVita?.passi||5000;
+      data.sport=p.stileVita?.sport||'nessuno';
+      data.sportFreq=p.stileVita?.sportFreq||0;
+      data.esclusioni=p.esclusioni||[];
+      data.alimenti=(p.alimentiSelezionati||[]).map(a=>a.id);
+      data.abitudini=p.abitudini||{};
+      data.pesate=p.pesate||[];
+      data.passiTouched=true;
+      data.esclusioniTouched=true;
+      current=4;
+      renderStep();
+    }catch(err){notify('Errore nella lettura del file: '+err.message);}
+  };
+  reader.readAsText(file);
+}
+
+
+function renderPesata(){
+  const today=new Date().toISOString().slice(0,10);
+  let rows='';
+  if(data.pesate.length===0){
+    rows=`<tr><td colspan="4"><div class="empty-pesate">Nessuna pesata registrata.<br>Aggiungi la prima misurazione per iniziare il tracciamento settimanale.</div></td></tr>`;
+  } else {
+    const sorted=[...data.pesate].sort((a,b)=>a.data.localeCompare(b.data));
+    rows=sorted.map((pe,i)=>{
+      let delta='‚Äî',cls='peso-delta-zero';
+      if(i>0){
+        const d=(pe.peso-sorted[i-1].peso);
+        const dr=(d>0?'+':'')+d.toFixed(1)+' kg';
+        cls=d<0?'peso-delta-neg':d>0?'peso-delta-pos':'peso-delta-zero';
+        delta=dr;
+      }
+      const dataIt=pe.data.split('-').reverse().join('/');
+      return`<tr><td>${dataIt}</td><td>${pe.peso.toFixed(1)} kg</td><td class="${cls}">${delta}</td><td><button class="btn-del" onclick="delPesata('${pe.data}')" title="Elimina">√ó</button></td></tr>`;
+    }).join('');
+  }
+
+  let trend='';
+  if(data.pesate.length>=2){
+    const sorted=[...data.pesate].sort((a,b)=>a.data.localeCompare(b.data));
+    const tot=(sorted[sorted.length-1].peso-sorted[0].peso);
+    const settimane=Math.max(1,Math.round((new Date(sorted[sorted.length-1].data)-new Date(sorted[0].data))/(7*86400000)));
+    const settiman=settimane>0?(tot/settimane):0;
+    const trendCls=tot<0?'peso-delta-neg':tot>0?'peso-delta-pos':'peso-delta-zero';
+    trend=`<div class="metric-grid" style="margin-top:1rem">
+      <div class="metric"><div class="metric-label">Variazione totale</div><div class="metric-value ${trendCls}" style="font-size:20px">${tot>0?'+':''}${tot.toFixed(1)} <span class="metric-unit">kg</span></div></div>
+      <div class="metric"><div class="metric-label">Media settimanale</div><div class="metric-value" style="font-size:20px">${settiman>0?'+':''}${settiman.toFixed(2)} <span class="metric-unit">kg/sett</span></div></div>
+      <div class="metric"><div class="metric-label">Misurazioni</div><div class="metric-value" style="font-size:20px">${data.pesate.length}</div></div>
+    </div>`;
+  }
+
+  return`
+  <p style="font-size:14px;color:#666;margin-bottom:1rem">Registra il peso una volta a settimana, sempre lo stesso giorno e a digiuno per dati coerenti.</p>
+  <div class="card">
+    <div class="peso-input-row">
+      <div><div class="field-label">Data</div><input type="date" id="pe-data" value="${today}"></div>
+      <div><div class="field-label">Peso (kg)</div><input type="number" id="pe-peso" step="0.1" min="30" max="200" placeholder="es. 67.5"></div>
+      <button class="btn-add" onclick="addPesata()">+ Aggiungi</button>
+    </div>
+  </div>
+  ${data.pesate.length>=2?`<div class="chart-wrap"><canvas id="pesoChart" height="200"></canvas></div>`:''}
+  ${trend}
+  <table class="peso-table">
+    <thead><tr><th>Data</th><th>Peso</th><th>Œî vs prec.</th><th></th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+function addPesata(){
+  const dataVal=document.getElementById('pe-data').value;
+  const pesoVal=parseFloat(document.getElementById('pe-peso').value);
+  if(!dataVal||!pesoVal||isNaN(pesoVal)){notify('Inserisci data e peso validi');return;}
+  data.pesate=data.pesate.filter(p=>p.data!==dataVal);
+  data.pesate.push({data:dataVal,peso:pesoVal});
+  document.getElementById('peso-container').innerHTML=renderPesata();
+  setTimeout(drawChart,50);
+}
+
+function delPesata(d){
+  data.pesate=data.pesate.filter(p=>p.data!==d);
+  document.getElementById('peso-container').innerHTML=renderPesata();
+  setTimeout(drawChart,50);
+}
+
+function drawChart(){
+  const cv=document.getElementById('pesoChart');
+  if(!cv||data.pesate.length<2)return;
+  const sorted=[...data.pesate].sort((a,b)=>a.data.localeCompare(b.data));
+  const ctx=cv.getContext('2d');
+  const W=cv.width=cv.offsetWidth*2,H=cv.height=400;
+  ctx.scale(1,1);
+  ctx.clearRect(0,0,W,H);
+  const pad=60;
+  const pesos=sorted.map(p=>p.peso);
+  const min=Math.min(...pesos)-1,max=Math.max(...pesos)+1;
+  const range=max-min||1;
+  const px=(i)=>pad+(i/(sorted.length-1))*(W-pad*1.5);
+  const py=(v)=>H-pad-((v-min)/range)*(H-pad*1.8);
+
+  // grid
+  ctx.strokeStyle='#e0e0db';ctx.lineWidth=1;ctx.fillStyle='#999';ctx.font='22px system-ui';
+  for(let i=0;i<=4;i++){
+    const v=min+(range*i/4);const y=py(v);
+    ctx.beginPath();ctx.moveTo(pad,y);ctx.lineTo(W-pad*0.5,y);ctx.stroke();
+    ctx.fillText(v.toFixed(1),8,y+7);
+  }
+  // line
+  ctx.strokeStyle='#2563eb';ctx.lineWidth=3;ctx.beginPath();
+  sorted.forEach((p,i)=>{const x=px(i),y=py(p.peso);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});
+  ctx.stroke();
+  // points + labels
+  ctx.fillStyle='#2563eb';
+  sorted.forEach((p,i)=>{
+    const x=px(i),y=py(p.peso);
+    ctx.beginPath();ctx.arc(x,y,6,0,7);ctx.fill();
+    ctx.fillStyle='#1a1a1a';ctx.font='bold 22px system-ui';ctx.textAlign='center';
+    ctx.fillText(p.peso.toFixed(1),x,y-16);
+    ctx.fillStyle='#999';ctx.font='18px system-ui';
+    ctx.fillText(p.data.slice(5).split('-').reverse().join('/'),x,H-pad+28);
+    ctx.fillStyle='#2563eb';
+  });
+  ctx.textAlign='left';
+}
+
+function collectStep(){
+  if(current===0&&document.getElementById('f-nome')){
+    data.nome=document.getElementById('f-nome')?.value||'';
+    data.sesso=document.getElementById('f-sesso')?.value||'M';
+    const e=document.getElementById('f-eta')?.value;
+    const p=document.getElementById('f-peso')?.value;
+    const a=document.getElementById('f-altezza')?.value;
+    data.eta=e?parseInt(e):null;
+    data.peso=p?parseFloat(p):null;
+    data.altezza=a?parseInt(a):null;
+  }
+}
+
+function next(){collectStep();if(current<5){current++;renderStep();}}
+function back(){if(current>0){current--;renderStep();}}
+
+function attach(){
+  document.querySelectorAll('[data-obiettivo]').forEach(b=>b.addEventListener('click',()=>{data.obiettivo=b.dataset.obiettivo;renderStep();}));
+  document.querySelectorAll('[data-lavoro]').forEach(b=>b.addEventListener('click',()=>{data.lavoro=b.dataset.lavoro;renderStep();}));
+  document.querySelectorAll('[data-sport]').forEach(b=>b.addEventListener('click',()=>{data.sport=b.dataset.sport;if(data.sport!=='nessuno'&&!data.sportFreq)data.sportFreq=2;renderStep();}));
+  document.querySelectorAll('[data-freq]').forEach(b=>b.addEventListener('click',()=>{data.sportFreq=parseInt(b.dataset.freq);renderStep();}));
+  document.querySelectorAll('[data-excl]').forEach(b=>b.addEventListener('click',()=>{data.esclusioniTouched=true;const e=b.dataset.excl;data.esclusioni=data.esclusioni.includes(e)?data.esclusioni.filter(x=>x!==e):[...data.esclusioni,e];renderStep();}));
+  document.querySelectorAll('[data-fid]').forEach(b=>b.addEventListener('click',()=>{const f=b.dataset.fid;data.alimenti=data.alimenti.includes(f)?data.alimenti.filter(x=>x!==f):[...data.alimenti,f];b.classList.toggle('selected',data.alimenti.includes(f));}));
+  const sl=document.getElementById('f-passi');
+  if(sl)sl.addEventListener('input',()=>{data.passi=parseInt(sl.value);data.passiTouched=true;document.getElementById('passi-val').textContent=data.passi.toLocaleString('it-IT');});
+}
+
+renderStep();
+</script>
+</body>
+</html>
+
